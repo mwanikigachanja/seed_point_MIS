@@ -55,6 +55,19 @@ def login():
 def protected(current_user):
     return jsonify({'message': 'You are authorized'}), 200
 
+@app.route('/profile', methods=['GET'])
+@token_required
+def get_profile(current_user):
+    return jsonify({'username': current_user.username}), 200
+
+@app.route('/profile', methods=['PUT'])
+@token_required
+def update_profile(current_user):
+    data = request.json
+    current_user.username = data.get('username', current_user.username)
+    db.session.commit()
+    return jsonify({'message': 'Profile updated successfully'}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
 
