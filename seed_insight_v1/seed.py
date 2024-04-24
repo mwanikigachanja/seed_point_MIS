@@ -35,6 +35,24 @@ def get_seeds():
     seed_list = [{'name': seed.name, 'variety': seed.variety} for seed in seeds]
     return jsonify(seed_list), 200
 
+@app.route('/seeds/filter', methods=['GET'])
+def filter_seeds():
+    query_params = request.args
+    name = query_params.get('name')
+    variety = query_params.get('variety')
+    # Implement filtering logic based on query parameters
+    seeds = Seed.query.filter_by(name=name, variety=variety).all()
+    seed_list = [{'name': seed.name, 'variety': seed.variety} for seed in seeds]
+    return jsonify(seed_list), 200
+
+@app.route('/seeds/search', methods=['GET'])
+def search_seeds():
+    search_query = request.args.get('q')
+    # Implement search logic based on search query
+    seeds = Seed.query.filter(Seed.name.ilike(f'%{search_query}%') | Seed.variety.ilike(f'%{search_query}%')).all()
+    seed_list = [{'name': seed.name, 'variety': seed.variety} for seed in seeds]
+    return jsonify(seed_list), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
 
