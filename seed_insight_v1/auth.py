@@ -1,8 +1,11 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+from functools import wraps
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/seedinsight'
 db = SQLAlchemy(app)
 
@@ -10,6 +13,20 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'message': 'Token is missing'}), 401
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            current_user = User.query.filter_by(id=data['user_id']).first()
+        except:
+            return jsonify({'message': 'Token is invalid'}), 401
+        return f(current_user, *args, **kwargs)
+    return decorated
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -30,8 +47,13 @@ def login():
     user = User.query.filter_by(username=username).first()
     if not user or not check_password_hash(user.password, password):
         return jsonify({'message': 'Invalid username or password'}), 401
-    # Generate JWT token and return to client
-    return jsonify({'message': 'Login successful', 'token': 'JWT_TOKEN_HERE'}), 200
+    token = jwt.encode({'user_id': user.id}, app.config['SECRET_KEY'], algorithm="HS256")
+    return jsonify({'message': 'Login successful', 'token': token}), 200
+
+@app.route('/protected', methods=['GET'])
+@token_required
+def protected(current_user):
+    return jsonify({'message': 'You are authorized'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
