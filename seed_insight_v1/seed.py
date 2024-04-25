@@ -53,6 +53,22 @@ def search_seeds():
     seed_list = [{'name': seed.name, 'variety': seed.variety} for seed in seeds]
     return jsonify(seed_list), 200
 
+# Endpoint for yield forecasting
+@app.route('/analysis/yield-forecast', methods=['POST'])
+def yield_forecast():
+    data = request.json
+    # Implement yield forecasting algorithm
+    # Return forecasted yield data
+    return jsonify({'message': 'Yield forecast generated successfully'}), 200
+
+# Endpoint for pest and disease management
+@app.route('/analysis/pest-disease', methods=['POST'])
+def pest_disease_management():
+    data = request.json
+    # Implement pest and disease management algorithm
+    # Return recommendations for pest and disease control
+    return jsonify({'message': 'Pest and disease management analysis completed'}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
 
